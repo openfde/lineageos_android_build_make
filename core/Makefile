@@ -3858,6 +3858,9 @@ define build-vendorimage-target
   $(call pretty,"Target vendor fs image: $(INSTALLED_VENDORIMAGE_TARGET)")
   @mkdir -p $(TARGET_OUT_VENDOR)
   @mkdir -p $(vendorimage_intermediates) && rm -rf $(vendorimage_intermediates)/vendor_image_info.txt
+  ln -sf libEGL_swiftshader.so $(TARGET_OUT_VENDOR)/lib/egl/libEGL_proxy.so \
+    && ln -sf libGLESv1_CM_swiftshader.so $(TARGET_OUT_VENDOR)/lib/egl/libGLESv1_CM_proxy.so \
+    && ln -sf libGLESv2_swiftshader.so $(TARGET_OUT_VENDOR)/lib/egl/libGLESv2_proxy.so
   $(call generate-image-prop-dictionary, $(vendorimage_intermediates)/vendor_image_info.txt,vendor,skip_fsck=true)
   PATH=$(INTERNAL_USERIMAGES_BINARY_PATHS):$$PATH \
       $(BUILD_IMAGE) \
