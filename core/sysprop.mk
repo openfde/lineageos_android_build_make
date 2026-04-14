@@ -37,17 +37,17 @@ define generate-common-build-props
     echo "# These properties identify this partition image." >> $(2);\
     echo "####################################" >> $(2);\
     $(if $(filter system,$(1)),\
-        echo "ro.product.$(1).brand=$(PRODUCT_SYSTEM_BRAND)" >> $(2);\
-        echo "ro.product.$(1).device=$(PRODUCT_SYSTEM_DEVICE)" >> $(2);\
-        echo "ro.product.$(1).manufacturer=$(PRODUCT_SYSTEM_MANUFACTURER)" >> $(2);\
-        echo "ro.product.$(1).model=$(PRODUCT_SYSTEM_MODEL)" >> $(2);\
-        echo "ro.product.$(1).name=$(PRODUCT_SYSTEM_NAME)" >> $(2);\
+        echo "ro.product.$(1).brand=$(if $(strip $(MOCK_PRODUCT_SYSTEM_BRAND)),$(MOCK_PRODUCT_SYSTEM_BRAND),$(PRODUCT_SYSTEM_BRAND))" >> $(2);\
+        echo "ro.product.$(1).device=$(if $(strip $(MOCK_PRODUCT_SYSTEM_DEVICE)),$(MOCK_PRODUCT_SYSTEM_DEVICE),$(PRODUCT_SYSTEM_DEVICE))" >> $(2);\
+        echo "ro.product.$(1).manufacturer=$(if $(strip $(MOCK_PRODUCT_SYSTEM_MANUFACTURER)),$(MOCK_PRODUCT_SYSTEM_MANUFACTURER),$(PRODUCT_SYSTEM_MANUFACTURER))" >> $(2);\
+        echo "ro.product.$(1).model=$(if $(strip $(MOCK_PRODUCT_SYSTEM_MODEL)),$(MOCK_PRODUCT_SYSTEM_MODEL),$(PRODUCT_SYSTEM_MODEL))" >> $(2);\
+        echo "ro.product.$(1).name=$(if $(strip $(MOCK_PRODUCT_SYSTEM_NAME)),$(MOCK_PRODUCT_SYSTEM_NAME),$(PRODUCT_SYSTEM_NAME))" >> $(2);\
       ,\
-        echo "ro.product.$(1).brand=$(PRODUCT_BRAND)" >> $(2);\
-        echo "ro.product.$(1).device=$${TARGET_DEVICE:-$(TARGET_DEVICE)}" >> $(2);\
-        echo "ro.product.$(1).manufacturer=$(PRODUCT_MANUFACTURER)" >> $(2);\
-        echo "ro.product.$(1).model=$${PRODUCT_MODEL:-$(PRODUCT_MODEL)}" >> $(2);\
-        echo "ro.product.$(1).name=$${TARGET_PRODUCT:-$(TARGET_PRODUCT)}" >> $(2);\
+        echo "ro.product.$(1).brand=$(if $(strip $(MOCK_PRODUCT_BRAND)),$(MOCK_PRODUCT_BRAND),$(PRODUCT_BRAND))" >> $(2);\
+        echo "ro.product.$(1).device=$(if $(strip $(MOCK_TARGET_DEVICE)),$(MOCK_TARGET_DEVICE),$${TARGET_DEVICE:-$(TARGET_DEVICE)})" >> $(2);\
+        echo "ro.product.$(1).manufacturer=$(if $(strip $(MOCK_PRODUCT_MANUFACTURER)),$(MOCK_PRODUCT_MANUFACTURER),$(PRODUCT_MANUFACTURER))" >> $(2);\
+        echo "ro.product.$(1).model=$(if $(strip $(MOCK_PRODUCT_MODEL)),$(MOCK_PRODUCT_MODEL),$${PRODUCT_MODEL:-$(PRODUCT_MODEL)})" >> $(2);\
+        echo "ro.product.$(1).name=$(if $(strip $(MOCK_TARGET_PRODUCT)),$(MOCK_TARGET_PRODUCT),$${TARGET_PRODUCT:-$(TARGET_PRODUCT)})" >> $(2);\
         if [ -n "$(strip $(PRODUCT_MODEL_FOR_ATTESTATION))" ]; then \
             echo "ro.product.model_for_attestation=$(PRODUCT_MODEL_FOR_ATTESTATION)" >> $(2);\
         fi; \
@@ -79,7 +79,7 @@ define generate-common-build-props
     )\
     echo "ro.$(1).build.date=`$(DATE_FROM_FILE)`" >> $(2);\
     echo "ro.$(1).build.date.utc=`$(DATE_FROM_FILE) +%s`" >> $(2);\
-    echo "ro.$(1).build.fingerprint?=$(BUILD_FINGERPRINT_FROM_FILE)" >> $(2);\
+    echo "ro.$(1).build.fingerprint=$(BUILD_FINGERPRINT_FROM_FILE)" >> $(2);\
     echo "ro.$(1).build.id?=$(BUILD_ID)" >> $(2);\
     echo "ro.$(1).build.tags?=$(BUILD_VERSION_TAGS)" >> $(2);\
     echo "ro.$(1).build.type=$(TARGET_BUILD_VARIANT)" >> $(2);\
@@ -191,7 +191,7 @@ BUILD_VERSION_TAGS := $(subst $(space),$(comma),$(sort $(BUILD_VERSION_TAGS)))
 # BUILD_FINGERPRINT is used used to uniquely identify the combined build and
 # product; used by the OTA server.
 ifeq (,$(strip $(BUILD_FINGERPRINT)))
-  BUILD_FINGERPRINT := $(PRODUCT_BRAND)/$(TARGET_PRODUCT)/$(TARGET_DEVICE):$(PLATFORM_VERSION)/$(BUILD_ID)/$(BUILD_NUMBER_FROM_FILE):$(TARGET_BUILD_VARIANT)/$(BUILD_VERSION_TAGS)
+  BUILD_FINGERPRINT := $(if $(strip $(MOCK_PRODUCT_BRAND)),$(MOCK_PRODUCT_BRAND),$(PRODUCT_BRAND))/$(if $(strip $(MOCK_TARGET_PRODUCT)),$(MOCK_TARGET_PRODUCT),$(TARGET_PRODUCT))/$(if $(strip $(MOCK_TARGET_DEVICE)),$(MOCK_TARGET_DEVICE),$(TARGET_DEVICE)):$(PLATFORM_VERSION)/$(BUILD_ID)/$(BUILD_NUMBER_FROM_FILE):$(TARGET_BUILD_VARIANT)/$(BUILD_VERSION_TAGS)
 endif
 
 BUILD_FINGERPRINT_FILE := $(PRODUCT_OUT)/build_fingerprint.txt
@@ -224,7 +224,7 @@ BUILD_THUMBPRINT :=
 #
 
 # BUILD_ID: detail info; has the same info as the build fingerprint
-BUILD_DESC := $(TARGET_PRODUCT)-$(TARGET_BUILD_VARIANT) $(PLATFORM_VERSION) $(BUILD_ID) $(BUILD_NUMBER_FROM_FILE) $(BUILD_VERSION_TAGS)
+BUILD_DESC := $(if $(strip $(MOCK_TARGET_PRODUCT)),$(MOCK_TARGET_PRODUCT),$(TARGET_PRODUCT))-$(TARGET_BUILD_VARIANT) $(PLATFORM_VERSION) $(BUILD_ID) $(BUILD_NUMBER_FROM_FILE) $(BUILD_VERSION_TAGS)
 
 # BUILD_DISPLAY_ID is shown under Settings -> About Phone
 ifeq ($(TARGET_BUILD_VARIANT),user)
@@ -246,7 +246,7 @@ endif
 # harness to distinguish builds. Only add _asan for a sanitized build
 # if it isn't already a part of the flavor (via a dedicated lunch
 # config for example).
-TARGET_BUILD_FLAVOR := $(TARGET_PRODUCT)-$(TARGET_BUILD_VARIANT)
+TARGET_BUILD_FLAVOR := $(if $(strip $(MOCK_TARGET_PRODUCT)),$(MOCK_TARGET_PRODUCT),$(TARGET_PRODUCT))-$(TARGET_BUILD_VARIANT)
 ifneq (, $(filter address, $(SANITIZE_TARGET)))
 ifeq (,$(findstring _asan,$(TARGET_BUILD_FLAVOR)))
 TARGET_BUILD_FLAVOR := $(TARGET_BUILD_FLAVOR)_asan
@@ -283,8 +283,8 @@ endif
 $(gen_from_buildinfo_sh): $(INTERNAL_BUILD_ID_MAKEFILE) $(API_FINGERPRINT) $(BUILD_HOSTNAME_FILE) | $(BUILD_DATETIME_FILE)
 	$(hide) TARGET_BUILD_TYPE="$(TARGET_BUILD_VARIANT)" \
 	        TARGET_BUILD_FLAVOR="$(TARGET_BUILD_FLAVOR)" \
-	        TARGET_DEVICE="$(TARGET_DEVICE)" \
-	        LINEAGE_DEVICE="$(TARGET_DEVICE)" \
+	        TARGET_DEVICE="$(if $(strip $(MOCK_TARGET_DEVICE)),$(MOCK_TARGET_DEVICE),$(TARGET_DEVICE))" \
+	        LINEAGE_DEVICE="$(if $(strip $(MOCK_TARGET_DEVICE)),$(MOCK_TARGET_DEVICE),$(TARGET_DEVICE))" \
 	        PRODUCT_DEFAULT_LOCALE="$(call get-default-product-locale,$(PRODUCT_LOCALES))" \
 	        PRODUCT_DEFAULT_WIFI_CHANNELS="$(PRODUCT_DEFAULT_WIFI_CHANNELS)" \
 	        PRIVATE_BUILD_DESC="$(BUILD_DESC)" \

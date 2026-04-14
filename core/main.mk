@@ -336,8 +336,8 @@ endif
 
 ADDITIONAL_VENDOR_PROPERTIES += \
     ro.vendor.build.security_patch=$(VENDOR_SECURITY_PATCH) \
-    ro.product.board=$(TARGET_BOOTLOADER_BOARD_NAME) \
-    ro.board.platform=$(TARGET_BOARD_PLATFORM) \
+    ro.product.board=$(if $(strip $(MOCK_TARGET_BOOTLOADER_BOARD_NAME)),$(MOCK_TARGET_BOOTLOADER_BOARD_NAME),$(TARGET_BOOTLOADER_BOARD_NAME)) \
+    ro.board.platform=$(if $(strip $(MOCK_TARGET_BOARD_PLATFORM)),$(MOCK_TARGET_BOARD_PLATFORM),$(TARGET_BOARD_PLATFORM)) \
     ro.hwui.use_vulkan=$(TARGET_USES_VULKAN)
 
 ifdef TARGET_SCREEN_DENSITY
