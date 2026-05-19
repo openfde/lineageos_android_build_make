@@ -169,10 +169,10 @@ PRODUCT_SYSTEM_PROPERTIES += \
 
 # Properties for the Unspecialized App Process Pool
 PRODUCT_SYSTEM_PROPERTIES += \
-    dalvik.vm.usap_pool_enabled?=false \
-    dalvik.vm.usap_refill_threshold?=1 \
-    dalvik.vm.usap_pool_size_max?=3 \
-    dalvik.vm.usap_pool_size_min?=1 \
+    dalvik.vm.usap_pool_enabled?=true \
+    dalvik.vm.usap_refill_threshold?=2 \
+    dalvik.vm.usap_pool_size_max?=5 \
+    dalvik.vm.usap_pool_size_min?=2 \
     dalvik.vm.usap_pool_refill_delay_ms?=3000
 
 # Allow dexopt files that are side-effects of already allowlisted files.
